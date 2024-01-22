@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <div id="messages"></div>
+    <script>
+        var ws = new WebSocket("ws://localhost:8080/ws");
+
+        ws.onmessage = function(event) {
+            var messages = document.getElementById('messages');
+            var message = document.createElement('p');
+            message.textContent = "Received: " + event.data;
+            messages.appendChild(message);
+        };
+
+        ws.onopen = function(event) {
+            ws.send("Hello Server!");
+        };
+
+        ws.onerror = function(event) {
+            console.error("WebSocket error observed:", event);
+        };
+
+        ws.onclose = function(event) {
+            console.log("WebSocket connection closed:", event);
+        };
+    </script>
+</body>
+</html>

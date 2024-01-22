@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 )
 
