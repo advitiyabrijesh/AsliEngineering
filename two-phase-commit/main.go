@@ -38,8 +38,14 @@ type DeliveryAgent struct {
 func Init() {
 	Connect()
 	db = GetDatabase()
-	db.AutoMigrate(&Order{})
-	db.AutoMigrate(&DeliveryAgent{})
+	err := db.AutoMigrate(&Order{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&DeliveryAgent{})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func ReserveAgent() (*DeliveryAgent, error) {
@@ -48,14 +54,14 @@ func ReserveAgent() (*DeliveryAgent, error) {
 		// Handle error. For example:
 		log.Fatalf("Failed to start transaction: %v", txn.Error)
 	}
-	var delivery_agent DeliveryAgent
-	row := db.Where("is_reserved = ? AND order_id", false, nil).First(&delivery_agent)
+	var deliveryAgent DeliveryAgent
+	row := db.Where("is_reserved = ? AND order_id", false, nil).First(&deliveryAgent)
 	if row.Error != nil || errors.Is(row.Error, gorm.ErrRecordNotFound) {
 		txn.Rollback()
 		return nil, errors.New("no delivery agent found")
 	}
 
-	result := txn.Model(&DeliveryAgent{}).Where("id = ?", delivery_agent.ID).Update("is_reserved", true)
+	result := txn.Model(&DeliveryAgent{}).Where("id = ?", deliveryAgent.ID).Update("is_reserved", true)
 	if result.Error != nil {
 		txn.Rollback()
 		return nil, result.Error
@@ -65,7 +71,7 @@ func ReserveAgent() (*DeliveryAgent, error) {
 	if commit.Error != nil {
 		return nil, commit.Error
 	}
-	return &delivery_agent, nil
+	return &deliveryAgent, nil
 
 }
 
@@ -75,13 +81,13 @@ func BookAgent(orderId string) (*DeliveryAgent, error) {
 		// Handle error. For example:
 		log.Fatalf("Failed to start transaction: %v", txn.Error)
 	}
-	var delivery_agent DeliveryAgent
-	row := db.Where("is_reserved = ? AND order_id", true, nil).First(&delivery_agent)
+	var deliveryAgent DeliveryAgent
+	row := db.Where("is_reserved = ? AND order_id", true, nil).First(&deliveryAgent)
 	if row.Error != nil || errors.Is(row.Error, gorm.ErrRecordNotFound) {
 		txn.Rollback()
 		return nil, errors.New("no delivery agent found")
 	}
-	result := txn.Model(&DeliveryAgent{}).Where("id = ?", delivery_agent.ID).Updates(map[string]interface{}{
+	result := txn.Model(&DeliveryAgent{}).Where("id = ?", deliveryAgent.ID).Updates(map[string]interface{}{
 		"is_reserved": false,
 		"order_id":    orderId,
 	})
@@ -94,7 +100,7 @@ func BookAgent(orderId string) (*DeliveryAgent, error) {
 	if commit.Error != nil {
 		return nil, commit.Error
 	}
-	return &delivery_agent, nil
+	return &deliveryAgent, nil
 }
 
 func main() {
@@ -114,5 +120,8 @@ func main() {
 
 	})
 
-	router.Run(":8080")
+	err := router.Run(":8080")
+	if err != nil {
+		panic(err)
+	}
 }
