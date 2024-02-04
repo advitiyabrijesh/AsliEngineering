@@ -1,0 +1,83 @@
+127.0.0.1:6379> GEOADD driver_locations 17.48804290171263 78.3527721999969 "Abhijeet"
+(integer) 1
+127.0.0.1:6379> GEOADD driver_locations 17.48804290171263 78.3527721999969 "Abhijeet1"
+(integer) 1
+127.0.0.1:6379> GEOADD driver_locations 17.488820603920793 78.35664530973563 "Abhijeet1"
+(integer) 0
+127.0.0.1:6379> GEOADD driver_locations 17.472317663736874 78.37416383152548 "Abhijeet2"
+(integer) 1
+127.0.0.1:6379> HMSET location_info:Abhijeet Rating 4.5 car_type "Sedan"
+OK
+127.0.0.1:6379> HMSET location_info:Abhijeet1 Rating 3.5 car_type "HB"
+OK
+127.0.0.1:6379> HMSET location_info:Abhijeet2 Rating 5.5 car_type "SUV"
+OK
+127.0.0.1:6379> HGETALL location_info:Abhijeet
+1) "Rating"
+2) "4.5"
+3) "car_type"
+4) "Sedan"
+127.0.0.1:6379> eval "redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 5);" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(error) ERR Wrong number of args calling Redis command from script script: d28fbc4020996ad8138760ac671f9b9d64b52b89, on @user_script:1.
+127.0.0.1:6379> eval "redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 5, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+
+(nil)
+127.0.0.1:6379> eval "redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 50, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(nil)
+127.0.0.1:6379> eval "redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 5000, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(nil)
+127.0.0.1:6379> eval "redis.call('georadius', 'driver_locations', 17.484710933268207, 78.36023090530539, 5000, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(nil)
+127.0.0.1:6379> eval "redis.call('georadius', 'location_info', 17.484710933268207, 78.36023090530539, 5000, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(nil)
+127.0.0.1:6379> eval "redis.call('georadius', driver_locations, 17.484710933268207, 78.36023090530539, 5000, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+(error) ERR user_script:1: Script attempted to access nonexistent global variable 'driver_locations' script: c011df82b0c4a39c2e9ab0bc170728ae2d0a0780, on @user_script:1.
+127.0.0.1:6379> GEORADIUS driver_locations 17.484710933268207 78.36023090530539 2000 km WITHCOORD WITHDIST
+1) 1) "Abhijeet"
+   2) "0.8330"
+   3) 1) "17.48804301023483276"
+      2) "78.35277198812393351"
+2) 1) "Abhijeet1"
+   2) "0.4094"
+   3) 1) "17.48882085084915161"
+      2) "78.35664504205540482"
+3) 1) "Abhijeet2"
+   2) "1.5746"
+   3) 1) "17.47231990098953247"
+      2) "78.37416503470876705"
+127.0.0.1:6379> eval "return redis.call('georadius', 'driver_locations', 17.484710933268207, 78.36023090530539, 5000, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+1) 1) "Abhijeet"
+   2) "0.8330"
+   3) 1) "17.48804301023483276"
+      2) "78.35277198812393351"
+2) 1) "Abhijeet1"
+   2) "0.4094"
+   3) 1) "17.48882085084915161"
+      2) "78.35664504205540482"
+3) 1) "Abhijeet2"
+   2) "1.5746"
+   3) 1) "17.47231990098953247"
+      2) "78.37416503470876705"
+127.0.0.1:6379> eval "return redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 5, 'km', 'WITHCOORD', 'WITHDIST');" 2 driver_locations location_info 17.484710933268207 78.36023090530539
+1) 1) "Abhijeet"
+   2) "0.8330"
+   3) 1) "17.48804301023483276"
+      2) "78.35277198812393351"
+2) 1) "Abhijeet1"
+   2) "0.4094"
+   3) 1) "17.48882085084915161"
+      2) "78.35664504205540482"
+3) 1) "Abhijeet2"
+   2) "1.5746"
+   3) 1) "17.47231990098953247"
+      2) "78.37416503470876705"
+127.0.0.1:6379> eval `local drivers = redis.call('georadius', KEYS[1], ARGV[1], ARGV[2], 5, 'km', 'WITHCOORD', 'WITHDIST');`
+Invalid argument(s)
+127.0.0.1:6379>
+127.0.0.1:6379> for i, driver in drivers do
+(error) ERR unknown command 'for', with args beginning with: 'i,' 'driver' 'in' 'drivers' 'do'
+127.0.0.1:6379> ACLlocal driver_params = redis.call('hmgetall', location_info:driver[0])
+Invalid argument(s)
+127.0.0.1:6379> ACLprint(driver_params)
+(error) ERR unknown command 'ACLprint(driver_params)', with args beginning with:
+127.0.0.1:6379> end
