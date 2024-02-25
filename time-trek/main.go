@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"log"
 	"net/http"
+	"time"
 	_ "time"
 
-	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -35,7 +36,7 @@ func init() {
 
 	// Initialize MySQL database connection
 	var err error
-	mysqlDB, err = sql.Open("mysql", "root:@tcp(localhost:3306)/asli_engineering")
+	mysqlDB, err = sql.Open("mysql", "root:@tcp(localhost:3306)/time-trek")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,45 +48,40 @@ func init() {
 }
 
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/storeLocation", storeLocationHandler).Methods("POST")
+	// Set Gin to production mode for better performance
+	gin.SetMode(gin.ReleaseMode)
 
-	http.Handle("/", r)
+	router := gin.Default()
+
+	router.POST("/storeLocation", storeLocationHandler)
 
 	fmt.Println("Server is running on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
-func storeLocationHandler(w http.ResponseWriter, r *http.Request) {
+func storeLocationHandler(c *gin.Context) {
 	var locationData LocationData
 
 	// Decode JSON payload
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&locationData)
-	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+	if err := c.BindJSON(&locationData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	defer r.Body.Close()
-
 	// Store data in Redis
-	err = storeInRedis(locationData)
-	if err != nil {
-		http.Error(w, "Error storing data in Redis", http.StatusInternalServerError)
+	if err := storeInRedis(locationData); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error storing data in Redis"})
 		return
 	}
 
 	// Store data in MySQL
-	err = storeInMySQL(locationData)
-	if err != nil {
-		http.Error(w, "Error storing data in MySQL", http.StatusInternalServerError)
+	if err := storeInMySQL(locationData); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error storing data in MySQL"})
 		return
 	}
 
 	// Respond with success
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Data stored successfully"))
+	c.JSON(http.StatusOK, gin.H{"message": "Data stored successfully"})
 }
 
 func storeInRedis(data LocationData) error {
@@ -96,7 +92,11 @@ func storeInRedis(data LocationData) error {
 	}
 
 	// Store data in Redis
-	err = redisClient.Set(redisClient.Context(), fmt.Sprintf("locationData:%d", data.UserID), jsonData, 0).Err()
+	err = redisClient.Set(
+		fmt.Sprintf("locationData:%d", data.UserID),
+		jsonData,
+		time.Duration(1)*time.Minute,
+	).Err()
 	if err != nil {
 		return err
 	}
