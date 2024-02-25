@@ -23,6 +23,10 @@ func main() {
 		handlers.RegisterHandler(c, db)
 	})
 
+	router.POST("/api/login", func(c *gin.Context) {
+		handlers.LoginHandler(c, db)
+	})
+
 	// Run the server
 	router.Run(":8080")
 }

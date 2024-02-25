@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time-trek/auth"
 	"time-trek/models"
 )
 
@@ -22,8 +24,18 @@ func RegisterHandler(c *gin.Context, db *sql.DB) {
 		return
 	}
 
+	// Hash the password before storing
+	hashedPassword, err := auth.HashPassword(newUser.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	newUser.Password = hashedPassword
+	fmt.Println("Hashed Password: " + hashedPassword)
+
 	// Store the user in the database
-	err := models.InsertUser(db, newUser)
+	err = models.InsertUser(db, newUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
