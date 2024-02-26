@@ -40,6 +40,13 @@ func InsertUser(db *sql.DB, user User) error {
 func GetUserByEmail(db *sql.DB, email string) (User, error) {
 	var user User
 	query := "SELECT * FROM users WHERE email = ?"
-	err := db.QueryRow(query, email).Scan(&user.UserId, &user.CreatedAt, &user.Email, &user.Password, &user.FirstName, &user.LastName)
+	err := db.QueryRow(query, email).Scan(
+		&user.UserId,
+		&user.CreatedAt,
+		&user.Email,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+	)
 	return user, err
 }

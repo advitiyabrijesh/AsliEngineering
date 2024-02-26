@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time-trek/auth"
@@ -32,7 +31,6 @@ func RegisterHandler(c *gin.Context, db *sql.DB) {
 	}
 
 	newUser.Password = hashedPassword
-	fmt.Println("Hashed Password: " + hashedPassword)
 
 	// Store the user in the database
 	err = models.InsertUser(db, newUser)

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time-trek/auth"
@@ -20,13 +19,11 @@ func LoginHandler(c *gin.Context, db *sql.DB) {
 
 	// Validate login credentials
 	user, err := models.GetUserByEmail(db, loginRequest.Email)
-	fmt.Println(user)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 	hashedPassword, _ := auth.HashPassword(loginRequest.Password)
-	fmt.Println(hashedPassword)
 	// Check if the provided password matches the stored hash
 	if !auth.CheckPasswordHash(hashedPassword, user.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
