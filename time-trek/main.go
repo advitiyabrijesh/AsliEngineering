@@ -52,6 +52,10 @@ func main() {
 		handlers.GetScreenTimeHandler(c, db)
 	})
 
+	router.GET("/api/locations/nearby", func(c *gin.Context) {
+		handlers.GetNearbyLocationsHandler(c, db)
+	})
+
 	// Run the server
 	err := router.Run(":8080")
 	if err != nil {
