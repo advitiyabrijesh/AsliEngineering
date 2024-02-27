@@ -41,11 +41,15 @@ func main() {
 	})
 
 	router.GET("/api/users/:user_id/location", func(c *gin.Context) {
-		handlers.GetUserLocationHandler(c, db)
+		handlers.GetUserLocationHandler(c, db, redisClient)
 	})
 
 	router.POST("/api/users/:user_id/location", func(c *gin.Context) {
-		handlers.UpdateUserLocationHandler(c, db)
+		handlers.UpdateUserLocationHandler(c, db, redisClient)
+	})
+
+	router.GET("/api/screen-time", func(c *gin.Context) {
+		handlers.GetScreenTimeHandler(c, db)
 	})
 
 	// Run the server

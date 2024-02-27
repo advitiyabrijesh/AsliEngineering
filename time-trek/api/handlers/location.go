@@ -3,13 +3,14 @@ package handlers
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"net/http"
 	"strconv"
 	"time-trek/models"
 )
 
 // GetUserLocationHandler retrieves user's current location
-func GetUserLocationHandler(c *gin.Context, db *sql.DB) {
+func GetUserLocationHandler(c *gin.Context, db *sql.DB, client *redis.Client) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
@@ -26,7 +27,7 @@ func GetUserLocationHandler(c *gin.Context, db *sql.DB) {
 }
 
 // UpdateUserLocationHandler shares user's current location
-func UpdateUserLocationHandler(c *gin.Context, db *sql.DB) {
+func UpdateUserLocationHandler(c *gin.Context, db *sql.DB, client *redis.Client) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
